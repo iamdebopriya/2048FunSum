@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const gridSize = 4;
     let board = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
-    let score = 0; // Initialize score
+    let score = 0;
     const gridContainer = document.querySelector('.grid-container');
     const scoreElement = document.querySelector('.score');
 
@@ -72,16 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        const [r, c] = direction === 'up' || direction === 'down' ? [row, col] : [row, col];
-        let [nextRow, nextCol] = getNext(r, c);
-
+        let [nextRow, nextCol] = getNext(row, col);
         while (nextRow >= 0 && nextRow < gridSize && nextCol >= 0 && nextCol < gridSize) {
             if (board[nextRow][nextCol] === 0) {
                 [board[nextRow][nextCol], board[row][col]] = [board[row][col], board[nextRow][nextCol]];
                 changed = true;
             } else if (board[nextRow][nextCol] === board[row][col]) {
                 board[nextRow][nextCol] *= 2;
-                score += board[nextRow][nextCol]; // Update score
+                score += board[nextRow][nextCol];
                 board[row][col] = 0;
                 changed = true;
             } else break;
@@ -109,11 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (moved) addRandomTile();
         updateBoard();
-        updateScore(); // Update the score display after each move
+        updateScore();
     }
 
     function updateScore() {
-        scoreElement.textContent = score; // Update the score element
+        scoreElement.textContent = score;
     }
 
     function handleKeyPress(event) {
@@ -125,15 +123,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function handleTouchStart(event) {
+        const touchStartX = event.touches[0].clientX;
+        const touchStartY = event.touches[0].clientY;
+
+        function handleTouchMove(event) {
+            const touchEndX = event.touches[0].clientX;
+            const touchEndY = event.touches[0].clientY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 0) move('right');
+                else move('left');
+            } else {
+                if (diffY > 0) move('down');
+                else move('up');
+            }
+
+            document.removeEventListener('touchmove', handleTouchMove);
+        }
+
+        document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    }
+
     function initGame() {
         board = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
-        score = 0; // Reset score
+        score = 0;
         createGrid();
         addRandomTile();
         addRandomTile();
         updateBoard();
-        updateScore(); // Update the score display initially
+        updateScore();
         document.addEventListener('keydown', handleKeyPress);
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
     }
 
     document.querySelector('.restart-btn').addEventListener('click', initGame);
